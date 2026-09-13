@@ -125,9 +125,6 @@ button{font-family:inherit;}
   text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
 }
 .player-name:hover,.player-name:focus{ background:var(--surface-2); outline:none; }
-.player-frac{ font-size:.72rem; color:var(--ink-soft); white-space:nowrap; }
-.bar-track{ height:6px; border-radius:999px; background:var(--surface-2); overflow:hidden; }
-.bar-fill{ height:100%; border-radius:999px; background:var(--accent); transition:width .25s ease; }
 
 /* ---------- Tabs ---------- */
 .tabs{ display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
@@ -159,6 +156,16 @@ select.rarity{
   user-select:none;
 }
 .toggle input{ accent-color:var(--accent); width:15px;height:15px; }
+
+.markall-group{ display:flex; gap:6px; align-items:center; }
+.markall-btn{
+  width:32px; height:32px; border-radius:10px; border:1px solid var(--line); color:#fff;
+  font-size:.68rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow); position:relative;
+}
+.markall-btn:after{ content:"✓"; position:absolute; bottom:-4px; right:-4px; background:var(--ink); color:var(--bg);
+  border-radius:50%; width:14px; height:14px; font-size:.55rem; display:flex; align-items:center; justify-content:center; }
+.markall-btn:hover{ filter:brightness(1.08); }
 
 .set-meta{ font-size:.78rem; color:var(--ink-soft); margin:-4px 0 12px; }
 .set-meta b{ color:var(--ink); font-weight:600; }
@@ -296,7 +303,12 @@ select.rarity{
   <div class="controls">
     <input class="search" id="search" type="text" placeholder="Buscar carta…">
     <select class="rarity" id="rarity"></select>
-    <label class="toggle"><input type="checkbox" id="onlyMissing"> Solo faltantes</label>
+    <label class="toggle"><input type="checkbox" id="onlyIncomplete"> Ver incompletas</label>
+    <div class="markall-group" id="markAllGroup">
+      <button class="markall-btn" data-p="0" type="button"></button>
+      <button class="markall-btn" data-p="1" type="button"></button>
+      <button class="markall-btn" data-p="2" type="button"></button>
+    </div>
   </div>
 
   <p class="set-meta" id="setMeta"></p>
@@ -386,10 +398,11 @@ let state = {
   activeSet: SETS[0].id,
   search: "",
   rarity: "normal",
-  onlyMissing: false,
+  onlyIncomplete: false, // true = ocultar cartas que ya tienen los 3 jugadores
 };
 
 let db = null;
+let lastMarkAll = null; // {p, setId, keys} — the most recent "completar" batch, so the same button can undo it
 
 function cardKey(setId, n){ return setId + "-" + n; }
 
@@ -427,9 +440,7 @@ function renderPlayers(){
       <div class="player-top">
         <span class="player-dot" style="background:${PLAYER_DOTS[p]}"></span>
         <input class="player-name" data-p="${p}" value="${escapeHtml(state.players[p])}" maxlength="18">
-        <span class="player-frac mono" id="frac${p}"></span>
       </div>
-      <div class="bar-track"><div class="bar-fill" id="bar${p}" style="background:${PLAYER_DOTS[p]}"></div></div>
     `;
     el.appendChild(div);
   }
@@ -448,32 +459,19 @@ function renderPlayers(){
     });
   });
   updateHeadDots();
-  updatePlayerProgress();
-}
-
-// Lightweight refresh for anything that changes when cards are (un)checked —
-// never touches the name inputs, so it can't steal focus or race with typing.
-function updatePlayerProgress(){
-  for(let p=0;p<NUM_PLAYERS;p++){
-    let total = 0, have = 0;
-    SETS.forEach(s => s.cards.forEach(c => {
-      if(RARITY_INFO[c.r].group !== "normal") return;
-      total++; if(state.owned[p][cardKey(s.id,c.n)]) have++;
-    }));
-    const pct = total ? Math.round(have/total*100) : 0;
-    const frac = document.getElementById("frac"+p);
-    const bar = document.getElementById("bar"+p);
-    if(frac) frac.textContent = have + "/" + total;
-    if(bar) bar.style.width = pct + "%";
-  }
 }
 
 function updateHeadDots(){
   for(let p=0;p<NUM_PLAYERS;p++){
-    const h = document.getElementById("h"+p);
-    if(!h) continue;
     const name = state.players[p] || DEFAULT_NAMES[p];
-    h.innerHTML = `<span class="head-dot" style="background:${PLAYER_DOTS[p]}" title="${escapeHtml(name)}">${escapeHtml(initials(name))}</span>`;
+    const h = document.getElementById("h"+p);
+    if(h) h.innerHTML = `<span class="head-dot" style="background:${PLAYER_DOTS[p]}" title="${escapeHtml(name)}">${escapeHtml(initials(name))}</span>`;
+    const mb = document.querySelector(`.markall-btn[data-p="${p}"]`);
+    if(mb){
+      mb.style.background = PLAYER_DOTS[p];
+      mb.textContent = initials(name);
+      mb.title = `Marcar todas como "tengo" (${name}) en esta pestaña`;
+    }
   }
 }
 
@@ -507,10 +505,7 @@ function matchesFilters(s, c){
   const info = RARITY_INFO[c.r];
   if(state.rarity === "ex" && c.r !== "DR") return false;
   else if(state.rarity !== "all" && state.rarity !== "ex" && info.group !== state.rarity) return false;
-  if(state.onlyMissing){
-    const cnt = ownerCountForKey(cardKey(s.id, c.n));
-    if(cnt === NUM_PLAYERS) return false;
-  }
+  if(state.onlyIncomplete && ownerCountForKey(cardKey(s.id, c.n)) === NUM_PLAYERS) return false;
   return true;
 }
 
@@ -578,9 +573,57 @@ function renderAll(){
 // Tab labels and set info are static composition numbers, so they don't
 // need to move — and crucially, this never rebuilds the name inputs.
 function refreshAfterToggle(){
-  updatePlayerProgress();
   renderRows();
   renderAskCount();
+}
+
+// Marks every card currently visible (respecting the active tab, rarity
+// filter, search and "solo faltantes" toggle) as "have" for one player —
+// handy near the end of a collection, when it's easier to start from
+// "tengo todas" and uncheck the few missing ones than the other way round.
+async function persistOwnedPatch(p, keys, value){
+  if(!db) return;
+  try{
+    const ref = col().doc("progress_p"+p);
+    const snap = await ref.get();
+    const patch = {};
+    keys.forEach(k => { patch["owned."+k] = value; });
+    if(snap.exists) await ref.update(patch);
+    else{
+      const owned = {};
+      keys.forEach(k => { owned[k] = value; });
+      await ref.set({owned});
+    }
+  }catch(e){ /* best effort, local state already updated */ }
+}
+
+function markAllVisible(p){
+  const s = SETS.find(x => x.id === state.activeSet);
+  const visible = s.cards.filter(c => matchesFilters(s, c));
+  const name = state.players[p] || DEFAULT_NAMES[p];
+
+  // Pulsar el mismo botón justo después deshace exactamente lo que acaba de
+  // marcar (no toca cartas que ya estuvieran marcadas antes de esa acción).
+  if(lastMarkAll && lastMarkAll.p === p && lastMarkAll.setId === s.id &&
+     lastMarkAll.keys.length > 0 && lastMarkAll.keys.every(k => state.owned[p][k])){
+    const keys = lastMarkAll.keys;
+    keys.forEach(k => { state.owned[p][k] = false; });
+    lastMarkAll = null;
+    refreshAfterToggle();
+    showToast(`Deshecho: ${keys.length} cartas de ${name} vuelven a estar sin marcar`);
+    persistOwnedPatch(p, keys, false);
+    return;
+  }
+
+  const toMark = visible.filter(c => !state.owned[p][cardKey(s.id, c.n)]);
+  if(toMark.length === 0){ showToast(`${name} ya las tiene todas marcadas aquí`); lastMarkAll = null; return; }
+
+  const keys = toMark.map(c => cardKey(s.id, c.n));
+  keys.forEach(k => { state.owned[p][k] = true; });
+  lastMarkAll = { p, setId: s.id, keys };
+  refreshAfterToggle();
+  showToast(`Marcadas ${keys.length} cartas de ${name} — pulsa otra vez para deshacer`);
+  persistOwnedPatch(p, keys, true);
 }
 
 // ---------- Ask sheet (only counts the "normal" cards needed to complete the collection) ----------
@@ -737,7 +780,10 @@ async function initDb(){
 renderRarityOptions();
 document.getElementById("search").addEventListener("input", e => { state.search = e.target.value; renderRows(); });
 document.getElementById("rarity").addEventListener("change", e => { state.rarity = e.target.value; renderRows(); });
-document.getElementById("onlyMissing").addEventListener("change", e => { state.onlyMissing = e.target.checked; renderRows(); });
+document.getElementById("onlyIncomplete").addEventListener("change", e => { state.onlyIncomplete = e.target.checked; renderRows(); });
+document.querySelectorAll(".markall-btn").forEach(btn => {
+  btn.addEventListener("click", () => markAllVisible(+btn.dataset.p));
+});
 document.getElementById("openAsk").addEventListener("click", () => { renderAskSheet(); document.getElementById("askOverlay").hidden = false; });
 document.getElementById("closeAsk").addEventListener("click", () => { document.getElementById("askOverlay").hidden = true; });
 document.getElementById("askOverlay").addEventListener("click", e => { if(e.target.id === "askOverlay") e.currentTarget.hidden = true; });
