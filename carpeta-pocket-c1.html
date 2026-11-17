@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carpeta Pocket</title>
+<style>
+:root{
+  --bg:#F2F5FB;
+  --surface:#FFFFFF;
+  --surface-2:#E7EDF8;
+  --ink:#20232B;
+  --ink-soft:#5C6472;
+  --accent:#2A75BB;
+  --accent-ink:#FFFFFF;
+  --gold:#FFCB05;
+  --gold-ink:#3B2E00;
+  --line:#D7E0F0;
+  --danger:#EE1515;
+  --danger-bg:#FCE4E2;
+  --warn:#F2A73B;
+  --warn-bg:#FBEBD3;
+  --good-bg:#E3EEF9;
+  --shadow:0 1px 2px rgba(32,35,43,.06),0 6px 16px rgba(32,35,43,.06);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161C;
+    --surface:#1B1E27;
+    --surface-2:#242836;
+    --ink:#ECEEF3;
+    --ink-soft:#A7AFC0;
+    --accent:#5B9BD9;
+    --accent-ink:#0B1520;
+    --gold:#FFD84D;
+    --gold-ink:#2B2100;
+    --line:#323647;
+    --danger:#FF6B5B;
+    --danger-bg:#3A211E;
+    --warn:#FFC24D;
+    --warn-bg:#3A3221;
+    --good-bg:#1C2C3D;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14161C;
+  --surface:#1B1E27;
+  --surface-2:#242836;
+  --ink:#ECEEF3;
+  --ink-soft:#A7AFC0;
+  --accent:#5B9BD9;
+  --accent-ink:#0B1520;
+  --gold:#FFD84D;
+  --gold-ink:#2B2100;
+  --line:#323647;
+  --danger:#FF6B5B;
+  --danger-bg:#3A211E;
+  --warn:#FFC24D;
+  --warn-bg:#3A3221;
+  --good-bg:#1C2C3D;
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 20px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Work Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  min-height:100vh;
+}
+h1,h2,h3,.display{
+  font-family:"Kanit",system-ui,sans-serif;
+  text-wrap:balance;
+  letter-spacing:.01em;
+}
+.mono{ font-family:"IBM Plex Mono",ui-monospace,monospace; font-variant-numeric: tabular-nums; }
+a{color:inherit;}
+button{font-family:inherit;}
+
+.wrap{ max-width:960px; margin:0 auto; padding:18px 16px 64px; }
+
+/* ---------- Header ---------- */
+.topbar{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  margin-bottom:16px;
+}
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--surface); border:3px solid var(--ink);
+  position:relative; overflow:hidden; flex:none; box-shadow:var(--shadow);
+}
+.brand-mark:before{ content:""; position:absolute; inset:0 0 50%; background:var(--danger); }
+.brand-mark:after{ content:""; position:absolute; left:50%; top:50%; width:12px; height:12px; border-radius:50%;
+  background:var(--surface); border:3px solid var(--ink); transform:translate(-50%,-50%); }
+.brand h1{ font-size:1.3rem; margin:0; font-weight:700; }
+.brand p{ margin:0; font-size:.78rem; color:var(--ink-soft); }
+
+.ask-btn{
+  display:flex; align-items:center; gap:6px;
+  background:var(--accent); color:var(--accent-ink); border:none;
+  padding:10px 14px; border-radius:999px; font-weight:600; font-size:.85rem;
+  cursor:pointer; box-shadow:var(--shadow); white-space:nowrap;
+}
+.ask-btn:hover{ filter:brightness(1.05); }
+.ask-btn .count{
+  background:rgba(0,0,0,.18); border-radius:999px; padding:1px 8px; font-family:"IBM Plex Mono",monospace;
+}
+
+/* ---------- Players bar ---------- */
+.players{
+  display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:16px;
+}
+.player-card{
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+  padding:10px 12px; box-shadow:var(--shadow);
+  display:flex; flex-direction:column; gap:6px; min-width:0;
+}
+.player-top{ display:flex; align-items:center; gap:8px; min-width:0; }
+.player-dot{ width:10px;height:10px;border-radius:50%; flex:none; }
+.player-name{
+  border:none; background:transparent; color:var(--ink); font-weight:600; font-size:.88rem;
+  padding:2px 4px; border-radius:6px; min-width:0; flex:1;
+  text-overflow:ellipsis; white-space:nowrap; overflow:hidden;
+}
+.player-name:hover,.player-name:focus{ background:var(--surface-2); outline:none; }
+
+/* ---------- Tabs ---------- */
+.tabs{ display:flex; gap:6px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px; }
+.tab{
+  border:1px solid var(--line); background:var(--surface); color:var(--ink-soft);
+  padding:9px 14px; border-radius:999px; font-size:.82rem; font-weight:600; white-space:nowrap;
+  cursor:pointer; flex:none;
+}
+.tab[aria-selected="true"]{ background:var(--ink); color:var(--bg); border-color:var(--ink); }
+.tab .n{ font-family:"IBM Plex Mono",monospace; opacity:.7; margin-left:4px; }
+
+/* ---------- Controls ---------- */
+.controls{
+  display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:12px;
+}
+.search{
+  flex:1 1 180px; min-width:140px;
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:9px 12px; color:var(--ink); font-size:.85rem;
+}
+.search:focus{ outline:2px solid var(--accent); outline-offset:-1px; }
+select.rarity{
+  background:var(--surface); border:1px solid var(--line); border-radius:10px;
+  padding:9px 10px; color:var(--ink); font-size:.82rem; max-width:100%;
+}
+.toggle{
+  display:flex; align-items:center; gap:6px; font-size:.8rem; color:var(--ink-soft);
+  background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:8px 10px; cursor:pointer;
+  user-select:none;
+}
+.toggle input{ accent-color:var(--accent); width:15px;height:15px; }
+
+.markall-group{ display:flex; gap:6px; align-items:center; }
+.markall-btn{
+  width:32px; height:32px; border-radius:10px; border:1px solid var(--line); color:#fff;
+  font-size:.68rem; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  box-shadow:var(--shadow); position:relative;
+}
+.markall-btn:after{ content:"✓"; position:absolute; bottom:-4px; right:-4px; background:var(--ink); color:var(--bg);
+  border-radius:50%; width:14px; height:14px; font-size:.55rem; display:flex; align-items:center; justify-content:center; }
+.markall-btn:hover{ filter:brightness(1.08); }
+
+.set-meta{ font-size:.78rem; color:var(--ink-soft); margin:-4px 0 12px; }
+.set-meta b{ color:var(--ink); font-weight:600; }
+
+/* ---------- Card list ---------- */
+.grid-head{
+  display:grid; grid-template-columns:1fr repeat(3,52px);
+  padding:0 10px 6px; font-size:.68rem;
+  color:var(--ink-soft); font-weight:600;
+}
+.grid-head span{ display:flex; justify-content:center; }
+.grid-head span:first-child{ justify-content:flex-start; }
+.head-dot{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:20px; height:20px; border-radius:50%; color:#fff; font-size:.6rem; font-weight:700;
+  letter-spacing:0;
+}
+
+.rows{ display:flex; flex-direction:column; gap:5px; }
+.row{
+  display:grid; grid-template-columns:1fr repeat(3,52px); align-items:center;
+  background:var(--surface); border:1px solid var(--line); border-radius:12px;
+  padding:9px 10px; box-shadow:var(--shadow);
+}
+.row.all-have{ opacity:.62; }
+.row.none-have{ border-color:var(--danger); background:var(--danger-bg); }
+.card-id{ font-family:"IBM Plex Mono",monospace; font-size:.7rem; color:var(--ink-soft); margin-right:8px; }
+.card-name{ font-size:.86rem; font-weight:500; }
+.card-name b.hit{ background:rgba(255,203,5,.45); border-radius:3px; }
+.tag{
+  display:inline-block; font-size:.63rem; font-weight:700; padding:1px 6px; border-radius:5px;
+  margin-left:6px; vertical-align:middle; white-space:nowrap;
+}
+.tag.t-ex{ background:var(--gold); color:var(--gold-ink); }
+.tag.t-ar{ background:var(--good-bg); color:var(--accent); }
+.tag.t-sr{ background:var(--warn-bg); color:var(--warn); }
+.tag.t-sar{ background:linear-gradient(90deg,#FDE6E4,#FBEBD3,#E3EEF9); color:var(--ink); }
+.tag.t-im{ background:var(--ink); color:var(--bg); }
+.tag.t-sh{ background:var(--surface-2); color:var(--ink-soft); }
+.tag.t-shsr{ background:var(--surface-2); color:var(--accent); }
+.tag.t-cr{ background:var(--gold); color:var(--gold-ink); }
+.namewrap{ display:flex; align-items:center; flex-wrap:wrap; gap:2px; min-width:0; }
+
+.chk{ display:flex; justify-content:center; }
+.chk button{
+  width:28px;height:28px; border-radius:8px; border:2px solid var(--line); background:transparent;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; color:transparent;
+  font-size:.9rem; font-weight:700; transition:.12s;
+}
+.chk button.have{ background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+.chk button.want{ border-color:var(--danger); color:var(--danger); }
+.chk button.some{ border-color:var(--warn); color:var(--warn); }
+.chk button:not(.have):before{ content:"–"; opacity:.35; }
+.chk button.have:before{ content:"✓"; }
+.chk button.want:before{ content:"!"; }
+.chk button.some:before{ content:"·"; }
+
+.empty-state{
+  text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:.9rem;
+}
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(15,16,22,.5); display:flex; align-items:flex-end;
+  justify-content:center; z-index:50; padding:0;
+}
+.overlay[hidden]{ display:none; }
+.sheet{
+  background:var(--surface); width:100%; max-width:640px; max-height:88vh; overflow-y:auto;
+  border-radius:20px 20px 0 0; padding:20px 18px 28px; box-shadow:var(--shadow);
+}
+@media (min-width:640px){
+  .overlay{ align-items:center; padding:20px; }
+  .sheet{ border-radius:20px; max-height:80vh; }
+}
+.sheet-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; gap:10px;}
+.sheet-head h2{ margin:0; font-size:1.15rem; }
+.close-btn{
+  background:var(--surface-2); border:none; width:32px;height:32px;border-radius:50%;
+  font-size:1rem; cursor:pointer; color:var(--ink); flex:none;
+}
+.sheet p.sub{ color:var(--ink-soft); font-size:.82rem; margin:2px 0 16px; }
+.ask-group{ margin-bottom:18px; }
+.ask-group h3{ font-size:.85rem; margin:0 0 8px; display:flex; align-items:center; gap:8px; }
+.ask-group h3 .n{ font-family:"IBM Plex Mono",monospace; color:var(--ink-soft); font-weight:400; }
+.ask-list{ background:var(--surface-2); border-radius:10px; padding:10px 12px; font-size:.82rem; line-height:1.7; max-height:220px; overflow-y:auto; }
+.ask-list .none{ color:var(--ink-soft); font-style:italic; }
+.copy-btn{
+  margin-top:8px; display:inline-flex; align-items:center; gap:6px;
+  background:var(--ink); color:var(--bg); border:none; padding:8px 14px; border-radius:999px;
+  font-size:.78rem; font-weight:600; cursor:pointer;
+}
+.copy-btn.secondary{ background:transparent; color:var(--ink); border:1px solid var(--line); }
+.copy-all{ position:sticky; bottom:-28px; background:var(--surface); padding:12px 0 0; margin-top:6px; }
+
+.toast{
+  position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(20px);
+  background:var(--ink); color:var(--bg); padding:10px 18px; border-radius:999px; font-size:.85rem;
+  opacity:0; pointer-events:none; transition:.2s; z-index:80; box-shadow:var(--shadow);
+}
+.toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+.sync-note{
+  font-size:.72rem; color:var(--warn); background:var(--warn-bg); border-radius:8px; padding:6px 10px; margin-bottom:12px;
+  display:none;
+}
+.sync-note.show{ display:block; }
+
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--line); border-radius:8px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <h1>Carpeta Pocket</h1>
+        <p>TCG Pocket · sincronizado con el grupo</p>
+      </div>
+    </div>
+    <button class="ask-btn" id="openAsk" type="button">
+      📋 Lista para pedir <span class="count" id="askCount">0</span>
+    </button>
+  </div>
+
+  <div class="sync-note" id="syncNote">Sin conexión con la base de datos compartida: los cambios solo se guardan en este dispositivo hasta que vuelva la conexión.</div>
+
+  <div class="players" id="players"></div>
+
+  <div class="tabs" id="tabs" role="tablist"></div>
+
+  <div class="controls">
+    <input class="search" id="search" type="text" placeholder="Buscar carta…">
+    <select class="rarity" id="rarity"></select>
+    <label class="toggle"><input type="checkbox" id="onlyIncomplete"> Ver incompletas</label>
+    <div class="markall-group" id="markAllGroup">
+      <button class="markall-btn" data-p="0" type="button"></button>
+      <button class="markall-btn" data-p="1" type="button"></button>
+      <button class="markall-btn" data-p="2" type="button"></button>
+    </div>
+  </div>
+
+  <p class="set-meta" id="setMeta"></p>
+
+  <div class="grid-head">
+    <span></span><span id="h0"></span><span id="h1"></span><span id="h2"></span>
+  </div>
+  <div class="rows" id="rows"></div>
+  <div class="empty-state" id="emptyState" hidden>No hay cartas que coincidan con el filtro.</div>
+</div>
+
+<div class="overlay" id="askOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-head">
+      <h2>📋 Lista para pedir</h2>
+      <button class="close-btn" id="closeAsk" type="button">✕</button>
+    </div>
+    <p class="sub">Copia y pega en el grupo — ordenado por colección.</p>
+    <div id="askBody"></div>
+    <div class="copy-all">
+      <button class="copy-btn" id="copyAll" type="button">Copiar todo</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@600;700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
+<script>
+// Firebase project for Carpeta Pocket — public read/write is intentional
+// (see the Firestore rules scoped to the "carpetaPocket" collection); this
+// is a casual shared checklist for a group of friends, not sensitive data.
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAGia11oFVEsWEjNAr3dCszENN1EOGmZk8",
+  authDomain: "pokemon-tcgp-3f031.firebaseapp.com",
+  projectId: "pokemon-tcgp-3f031",
+  storageBucket: "pokemon-tcgp-3f031.firebasestorage.app",
+  messagingSenderId: "713647686267",
+  appId: "1:713647686267:web:167b11765650eefbd058de",
+};
+
+const SETS = [{"id":"b4a","name":"Team Rocket's Ambition","short":"Ambición Rocket","release":"2026-08-27","cards":[{"n":1,"name":"Volbeat","r":"C"},{"n":2,"name":"Illumise","r":"C"},{"n":3,"name":"Snivy","r":"C"},{"n":4,"name":"Servine","r":"U"},{"n":5,"name":"Serperior","r":"R"},{"n":6,"name":"Team Rocket's Magmar","r":"C"},{"n":7,"name":"Team Rocket's Moltres ex","r":"DR"},{"n":8,"name":"Team Rocket's Houndour","r":"C"},{"n":9,"name":"Team Rocket's Houndoom","r":"C"},{"n":10,"name":"Fennekin","r":"C"},{"n":11,"name":"Braixen","r":"U"},{"n":12,"name":"Delphox","r":"R"},{"n":13,"name":"Team Rocket's Lapras","r":"U"},{"n":14,"name":"Team Rocket's Articuno ex","r":"DR"},{"n":15,"name":"Wingull","r":"C"},{"n":16,"name":"Pelipper","r":"U"},{"n":17,"name":"Hisuian Basculin","r":"C"},{"n":18,"name":"Hisuian Basculegion","r":"U"},{"n":19,"name":"Team Rocket's Voltorb","r":"C"},{"n":20,"name":"Team Rocket's Electrode","r":"U"},{"n":21,"name":"Team Rocket's Zapdos ex","r":"DR"},{"n":22,"name":"Blitzle","r":"C"},{"n":23,"name":"Zebstrika","r":"U"},{"n":24,"name":"Team Rocket's Pincurchin","r":"C"},{"n":25,"name":"Team Rocket's Slowpoke","r":"C"},{"n":26,"name":"Team Rocket's Slowking ex","r":"DR"},{"n":27,"name":"Team Rocket's Drowzee","r":"C"},{"n":28,"name":"Team Rocket's Hypno","r":"U"},{"n":29,"name":"Team Rocket's Mr. Mime","r":"C"},{"n":30,"name":"Team Rocket's Mewtwo","r":"R"},{"n":31,"name":"Espurr","r":"C"},{"n":32,"name":"Meowstic","r":"U"},{"n":33,"name":"Oranguru","r":"U"},{"n":34,"name":"Gimmighoul","r":"C"},{"n":35,"name":"Cubone","r":"C"},{"n":36,"name":"Marowak","r":"U"},{"n":37,"name":"Landorus","r":"R"},{"n":38,"name":"Team Rocket's Ekans","r":"C"},{"n":39,"name":"Team Rocket's Arbok","r":"U"},{"n":40,"name":"Team Rocket's Grimer","r":"C"},{"n":41,"name":"Team Rocket's Muk","r":"U"},{"n":42,"name":"Team Rocket's Koffing","r":"C"},{"n":43,"name":"Team Rocket's Weezing ex","r":"DR"},{"n":44,"name":"Team Rocket's Sneasel","r":"C"},{"n":45,"name":"Togedemaru","r":"C"},{"n":46,"name":"Cufant","r":"C"},{"n":47,"name":"Copperajah","r":"U"},{"n":48,"name":"Team Rocket's Tinkatink","r":"C"},{"n":49,"name":"Team Rocket's Tinkatuff","r":"U"},{"n":50,"name":"Team Rocket's Tinkaton","r":"R"},{"n":51,"name":"Gholdengo","r":"U"},{"n":52,"name":"Gible","r":"C"},{"n":53,"name":"Gabite","r":"U"},{"n":54,"name":"Garchomp","r":"R"},{"n":55,"name":"Duraludon","r":"U"},{"n":56,"name":"Archaludon","r":"R"},{"n":57,"name":"Regidrago","r":"U"},{"n":58,"name":"Team Rocket's Rattata","r":"C"},{"n":59,"name":"Team Rocket's Raticate ex","r":"DR"},{"n":60,"name":"Team Rocket's Meowth","r":"C"},{"n":61,"name":"Team Rocket's Persian","r":"U"},{"n":62,"name":"Team Rocket's Kecleon","r":"C"},{"n":63,"name":"Happiny","r":"R"},{"n":64,"name":"Furfrou","r":"C"},{"n":65,"name":"Lechonk","r":"C"},{"n":66,"name":"Oinkologne","r":"C"},{"n":67,"name":"Team Rocket's Thieving Machine","r":"U"},{"n":68,"name":"Team Rocket's Goo-zooka","r":"U"},{"n":69,"name":"Team Rocket's Researcher","r":"U"},{"n":70,"name":"Team Rocket's Master Plan","r":"U"},{"n":71,"name":"Team Rocket's Boss","r":"U"},{"n":72,"name":"Arcade","r":"U"},{"n":73,"name":"Delphox","r":"AR"},{"n":74,"name":"Team Rocket's Hypno","r":"AR"},{"n":75,"name":"Team Rocket's Tinkaton","r":"AR"},{"n":76,"name":"Team Rocket's Kecleon","r":"AR"},{"n":77,"name":"Happiny","r":"AR"},{"n":78,"name":"Lechonk","r":"AR"},{"n":79,"name":"Team Rocket's Moltres ex","r":"SR"},{"n":80,"name":"Team Rocket's Articuno ex","r":"SR"},{"n":81,"name":"Team Rocket's Zapdos ex","r":"SR"},{"n":82,"name":"Team Rocket's Slowking ex","r":"SR"},{"n":83,"name":"Team Rocket's Weezing ex","r":"SR"},{"n":84,"name":"Team Rocket's Raticate ex","r":"SR"},{"n":85,"name":"Team Rocket's Researcher","r":"SR"},{"n":86,"name":"Team Rocket's Master Plan","r":"SR"},{"n":87,"name":"Team Rocket's Boss","r":"SR"},{"n":88,"name":"Team Rocket's Moltres ex","r":"SAR"},{"n":89,"name":"Team Rocket's Articuno ex","r":"SAR"},{"n":90,"name":"Team Rocket's Zapdos ex","r":"SAR"},{"n":91,"name":"Team Rocket's Slowking ex","r":"SAR"},{"n":92,"name":"Team Rocket's Weezing ex","r":"SAR"},{"n":93,"name":"Team Rocket's Raticate ex","r":"SAR"},{"n":94,"name":"Team Rocket's Master Plan","r":"IM"},{"n":95,"name":"Vulpix","r":"SH"},{"n":96,"name":"Ninetales","r":"SH"},{"n":97,"name":"Goldeen","r":"SH"},{"n":98,"name":"Seaking","r":"SH"},{"n":99,"name":"Toxel","r":"SH"},{"n":100,"name":"Sinistea","r":"SH"},{"n":101,"name":"Polteageist","r":"SH"},{"n":102,"name":"Mawile","r":"SH"},{"n":103,"name":"Taillow","r":"SH"},{"n":104,"name":"Swellow","r":"SH"},{"n":105,"name":"Mega Charizard Y ex","r":"SHSR"},{"n":106,"name":"Toxtricity ex","r":"SHSR"},{"n":107,"name":"Mimikyu ex","r":"SHSR"},{"n":108,"name":"Mega Mawile ex","r":"SHSR"},{"n":109,"name":"Gholdengo","r":"CR"},{"n":110,"name":"Team Rocket's Goo-zooka","r":"CR"}]},{"id":"b4","name":"Ruler of the Skies","short":"Señor de los Cielos","release":"2026-07-30","cards":[{"n":1,"name":"Wurmple","r":"C"},{"n":2,"name":"Silcoon","r":"C"},{"n":3,"name":"Beautifly","r":"U"},{"n":4,"name":"Cascoon","r":"C"},{"n":5,"name":"Dustox","r":"R"},{"n":6,"name":"Lileep","r":"U"},{"n":7,"name":"Cradily","r":"R"},{"n":8,"name":"Kricketot","r":"C"},{"n":9,"name":"Kricketune","r":"C"},{"n":10,"name":"Combee","r":"C"},{"n":11,"name":"Vespiquen ex","r":"DR"},{"n":12,"name":"Karrablast","r":"C"},{"n":13,"name":"Shelmet","r":"C"},{"n":14,"name":"Accelgor","r":"R"},{"n":15,"name":"Dhelmise","r":"C"},{"n":16,"name":"Pheromosa","r":"U"},{"n":17,"name":"Poltchageist","r":"C"},{"n":18,"name":"Sinistcha","r":"U"},{"n":19,"name":"Teal Mask Ogerpon","r":"R"},{"n":20,"name":"Ponyta","r":"C"},{"n":21,"name":"Rapidash","r":"U"},{"n":22,"name":"Flareon","r":"U"},{"n":23,"name":"Moltres","r":"R"},{"n":24,"name":"Cyndaquil","r":"C"},{"n":25,"name":"Quilava","r":"U"},{"n":26,"name":"Typhlosion ex","r":"DR"},{"n":27,"name":"Houndour","r":"C"},{"n":28,"name":"Houndoom","r":"U"},{"n":29,"name":"Heatmor","r":"C"},{"n":30,"name":"Psyduck","r":"C"},{"n":31,"name":"Golduck","r":"C"},{"n":32,"name":"Staryu","r":"C"},{"n":33,"name":"Starmie","r":"U"},{"n":34,"name":"Carvanha","r":"C"},{"n":35,"name":"Mega Sharpedo ex","r":"DR"},{"n":36,"name":"Wailmer","r":"C"},{"n":37,"name":"Wailord ex","r":"DR"},{"n":38,"name":"Spheal","r":"C"},{"n":39,"name":"Sealeo","r":"U"},{"n":40,"name":"Walrein","r":"R"},{"n":41,"name":"Kyogre","r":"R"},{"n":42,"name":"Oshawott","r":"C"},{"n":43,"name":"Dewott","r":"U"},{"n":44,"name":"Samurott","r":"R"},{"n":45,"name":"Alomomola","r":"U"},{"n":46,"name":"Dewpider","r":"C"},{"n":47,"name":"Araquanid","r":"U"},{"n":48,"name":"Bruxish","r":"C"},{"n":49,"name":"Pikachu","r":"C"},{"n":50,"name":"Raichu","r":"R"},{"n":51,"name":"Shinx","r":"C"},{"n":52,"name":"Luxio","r":"U"},{"n":53,"name":"Luxray","r":"R"},{"n":54,"name":"Pachirisu","r":"C"},{"n":55,"name":"Rotom ex","r":"DR"},{"n":56,"name":"Tynamo","r":"C"},{"n":57,"name":"Eelektrik","r":"C"},{"n":58,"name":"Eelektross","r":"U"},{"n":59,"name":"Thundurus","r":"R"},{"n":60,"name":"Helioptile","r":"C"},{"n":61,"name":"Heliolisk","r":"U"},{"n":62,"name":"Wattrel","r":"C"},{"n":63,"name":"Kilowattrel","r":"U"},{"n":64,"name":"Clefairy","r":"C"},{"n":65,"name":"Clefable","r":"C"},{"n":66,"name":"Drowzee","r":"C"},{"n":67,"name":"Hypno","r":"U"},{"n":68,"name":"Mime Jr.","r":"R"},{"n":69,"name":"Mr. Mime","r":"C"},{"n":70,"name":"Mewtwo","r":"R"},{"n":71,"name":"Ralts","r":"C"},{"n":72,"name":"Kirlia","r":"U"},{"n":73,"name":"Chimecho","r":"C"},{"n":74,"name":"Wynaut","r":"R"},{"n":75,"name":"Woobat","r":"C"},{"n":76,"name":"Swoobat","r":"C"},{"n":77,"name":"Hoopa","r":"U"},{"n":78,"name":"Oricorio","r":"U"},{"n":79,"name":"Makuhita","r":"C"},{"n":80,"name":"Hariyama","r":"U"},{"n":81,"name":"Anorith","r":"U"},{"n":82,"name":"Armaldo","r":"R"},{"n":83,"name":"Groudon","r":"R"},{"n":84,"name":"Mega Gallade ex","r":"DR"},{"n":85,"name":"Drilbur","r":"C"},{"n":86,"name":"Excadrill","r":"U"},{"n":87,"name":"Timburr","r":"C"},{"n":88,"name":"Gurdurr","r":"U"},{"n":89,"name":"Conkeldurr","r":"R"},{"n":90,"name":"Minior","r":"C"},{"n":91,"name":"Grimer","r":"C"},{"n":92,"name":"Muk","r":"U"},{"n":93,"name":"Poochyena","r":"C"},{"n":94,"name":"Mightyena","r":"C"},{"n":95,"name":"Galarian Zigzagoon","r":"C"},{"n":96,"name":"Galarian Linoone","r":"U"},{"n":97,"name":"Galarian Obstagoon","r":"R"},{"n":98,"name":"Gulpin","r":"C"},{"n":99,"name":"Swalot","r":"U"},{"n":100,"name":"Absol","r":"U"},{"n":101,"name":"Vullaby","r":"C"},{"n":102,"name":"Mandibuzz","r":"U"},{"n":103,"name":"Hoopa ex","r":"DR"},{"n":104,"name":"Skarmory","r":"C"},{"n":105,"name":"Mawile","r":"C"},{"n":106,"name":"Beldum","r":"C"},{"n":107,"name":"Metang","r":"U"},{"n":108,"name":"Metagross","r":"R"},{"n":109,"name":"Mega Metagross ex","r":"DR"},{"n":110,"name":"Escavalier","r":"U"},{"n":111,"name":"Genesect","r":"R"},{"n":112,"name":"Duraludon","r":"U"},{"n":113,"name":"Archaludon","r":"R"},{"n":114,"name":"Varoom","r":"C"},{"n":115,"name":"Revavroom","r":"R"},{"n":116,"name":"Dratini","r":"C"},{"n":117,"name":"Dragonair","r":"U"},{"n":118,"name":"Dragonite","r":"R"},{"n":119,"name":"Rayquaza","r":"R"},{"n":120,"name":"Mega Rayquaza ex","r":"DR"},{"n":121,"name":"Noibat","r":"C"},{"n":122,"name":"Noivern","r":"R"},{"n":123,"name":"Turtonator","r":"U"},{"n":124,"name":"Drampa","r":"U"},{"n":125,"name":"Applin","r":"C"},{"n":126,"name":"Dipplin","r":"U"},{"n":127,"name":"Hydrapple","r":"R"},{"n":128,"name":"Cyclizar","r":"U"},{"n":129,"name":"Rattata","r":"C"},{"n":130,"name":"Raticate","r":"R"},{"n":131,"name":"Eevee","r":"C"},{"n":132,"name":"Aipom","r":"C"},{"n":133,"name":"Ambipom","r":"C"},{"n":134,"name":"Skitty","r":"C"},{"n":135,"name":"Delcatty","r":"U"},{"n":136,"name":"Kecleon","r":"C"},{"n":137,"name":"Pidove","r":"C"},{"n":138,"name":"Tranquill","r":"C"},{"n":139,"name":"Unfezant","r":"U"},{"n":140,"name":"Ducklett","r":"C"},{"n":141,"name":"Swanna ex","r":"DR"},{"n":142,"name":"Furfrou","r":"U"},{"n":143,"name":"Type: Null","r":"U"},{"n":144,"name":"Silvally","r":"R"},{"n":145,"name":"Order Pad","r":"U"},{"n":146,"name":"Claw Fossil","r":"C"},{"n":147,"name":"Root Fossil","r":"C"},{"n":148,"name":"Deceptive Needle","r":"U"},{"n":149,"name":"Clear Veil","r":"U"},{"n":150,"name":"Psychic","r":"U"},{"n":151,"name":"Drayden","r":"U"},{"n":152,"name":"Skyla","r":"U"},{"n":153,"name":"Wally","r":"U"},{"n":154,"name":"Soothing Shore","r":"U"},{"n":155,"name":"Rainbow Cave","r":"U"},{"n":156,"name":"Wurmple","r":"AR"},{"n":157,"name":"Lileep","r":"AR"},{"n":158,"name":"Kricketune","r":"AR"},{"n":159,"name":"Accelgor","r":"AR"},{"n":160,"name":"Ponyta","r":"AR"},{"n":161,"name":"Quilava","r":"AR"},{"n":162,"name":"Kyogre","r":"AR"},{"n":163,"name":"Samurott","r":"AR"},{"n":164,"name":"Raichu","r":"AR"},{"n":165,"name":"Wattrel","r":"AR"},{"n":166,"name":"Clefairy","r":"AR"},{"n":167,"name":"Ralts","r":"AR"},{"n":168,"name":"Wynaut","r":"AR"},{"n":169,"name":"Oricorio","r":"AR"},{"n":170,"name":"Anorith","r":"AR"},{"n":171,"name":"Poochyena","r":"AR"},{"n":172,"name":"Gulpin","r":"AR"},{"n":173,"name":"Vullaby","r":"AR"},{"n":174,"name":"Genesect","r":"AR"},{"n":175,"name":"Dragonair","r":"AR"},{"n":176,"name":"Noivern","r":"AR"},{"n":177,"name":"Cyclizar","r":"AR"},{"n":178,"name":"Raticate","r":"AR"},{"n":179,"name":"Aipom","r":"AR"},{"n":180,"name":"Vespiquen ex","r":"SR"},{"n":181,"name":"Typhlosion ex","r":"SR"},{"n":182,"name":"Mega Sharpedo ex","r":"SR"},{"n":183,"name":"Wailord ex","r":"SR"},{"n":184,"name":"Rotom ex","r":"SR"},{"n":185,"name":"Mega Gallade ex","r":"SR"},{"n":186,"name":"Hoopa ex","r":"SR"},{"n":187,"name":"Mega Metagross ex","r":"SR"},{"n":188,"name":"Mega Rayquaza ex","r":"SR"},{"n":189,"name":"Swanna ex","r":"SR"},{"n":190,"name":"Psychic","r":"SR"},{"n":191,"name":"Drayden","r":"SR"},{"n":192,"name":"Skyla","r":"SR"},{"n":193,"name":"Wally","r":"SR"},{"n":194,"name":"Vespiquen ex","r":"SAR"},{"n":195,"name":"Typhlosion ex","r":"SAR"},{"n":196,"name":"Mega Sharpedo ex","r":"SAR"},{"n":197,"name":"Wailord ex","r":"SAR"},{"n":198,"name":"Mega Gallade ex","r":"SAR"},{"n":199,"name":"Hoopa ex","r":"SAR"},{"n":200,"name":"Mega Metagross ex","r":"SAR"},{"n":201,"name":"Swanna ex","r":"SAR"},{"n":202,"name":"Rotom ex","r":"IM"},{"n":203,"name":"Mega Rayquaza ex","r":"IM"},{"n":204,"name":"Alolan Vulpix","r":"SH"},{"n":205,"name":"Mudkip","r":"SH"},{"n":206,"name":"Marshtomp","r":"SH"},{"n":207,"name":"Swampert","r":"SH"},{"n":208,"name":"Electabuzz","r":"SH"},{"n":209,"name":"Plusle","r":"SH"},{"n":210,"name":"Minun","r":"SH"},{"n":211,"name":"Mr. Mime","r":"SH"},{"n":212,"name":"Mewtwo","r":"SH"},{"n":213,"name":"Roggenrola","r":"SH"},{"n":214,"name":"Boldore","r":"SH"},{"n":215,"name":"Falinks","r":"SH"},{"n":216,"name":"Koffing","r":"SH"},{"n":217,"name":"Weezing","r":"SH"},{"n":218,"name":"Galarian Meowth","r":"SH"},{"n":219,"name":"Galarian Perrserker","r":"SH"},{"n":220,"name":"Rattata","r":"SH"},{"n":221,"name":"Raticate","r":"SH"},{"n":222,"name":"Smeargle","r":"SH"},{"n":223,"name":"Buneary","r":"SH"},{"n":224,"name":"Blacephalon ex","r":"SHSR"},{"n":225,"name":"Alolan Ninetales ex","r":"SHSR"},{"n":226,"name":"Mega Swampert ex","r":"SHSR"},{"n":227,"name":"Mega Gardevoir ex","r":"SHSR"},{"n":228,"name":"Mega Lopunny ex","r":"SHSR"},{"n":229,"name":"Gigalith ex","r":"SHSR"},{"n":230,"name":"Zoroark ex","r":"SHSR"},{"n":231,"name":"Mega Kangaskhan ex","r":"SHSR"},{"n":232,"name":"Raichu","r":"CR"},{"n":233,"name":"Dragonair","r":"CR"}]},{"id":"b3b","name":"Everyday Wonders","short":"Maravillas Cotidianas","release":"2026-06-30","cards":[{"n":1,"name":"Caterpie","r":"C"},{"n":2,"name":"Metapod","r":"U"},{"n":3,"name":"Butterfree","r":"R"},{"n":4,"name":"Cacnea","r":"C"},{"n":5,"name":"Tropius","r":"U"},{"n":6,"name":"Petilil","r":"C"},{"n":7,"name":"Hisuian Lilligant","r":"U"},{"n":8,"name":"Vulpix","r":"C"},{"n":9,"name":"Ninetales","r":"U"},{"n":10,"name":"Growlithe","r":"C"},{"n":11,"name":"Psyduck","r":"C"},{"n":12,"name":"Goldeen","r":"C"},{"n":13,"name":"Seaking","r":"U"},{"n":14,"name":"Feebas","r":"C"},{"n":15,"name":"Milotic ex","r":"DR"},{"n":16,"name":"Snorunt","r":"C"},{"n":17,"name":"Froslass","r":"R"},{"n":18,"name":"Luvdisc","r":"C"},{"n":19,"name":"Piplup","r":"C"},{"n":20,"name":"Iron Bundle","r":"U"},{"n":21,"name":"Pikachu","r":"C"},{"n":22,"name":"Raichu","r":"U"},{"n":23,"name":"Emolga","r":"C"},{"n":24,"name":"Dedenne ex","r":"DR"},{"n":25,"name":"Yamper","r":"C"},{"n":26,"name":"Slowpoke","r":"C"},{"n":27,"name":"Slowbro","r":"U"},{"n":28,"name":"Munna","r":"C"},{"n":29,"name":"Musharna","r":"U"},{"n":30,"name":"Sylveon","r":"R"},{"n":31,"name":"Carbink","r":"U"},{"n":32,"name":"Mega Diancie ex","r":"DR"},{"n":33,"name":"Enamorus","r":"R"},{"n":34,"name":"Fidough","r":"C"},{"n":35,"name":"Flutter Mane","r":"U"},{"n":36,"name":"Wooper","r":"C"},{"n":37,"name":"Quagsire","r":"U"},{"n":38,"name":"Rockruff","r":"C"},{"n":39,"name":"Sandygast","r":"C"},{"n":40,"name":"Palossand","r":"U"},{"n":41,"name":"Mega Sableye ex","r":"DR"},{"n":42,"name":"Cacturne","r":"U"},{"n":43,"name":"Spiritomb","r":"U"},{"n":44,"name":"Scraggy","r":"C"},{"n":45,"name":"Scrafty","r":"U"},{"n":46,"name":"Mareanie","r":"C"},{"n":47,"name":"Toxapex","r":"U"},{"n":48,"name":"Goomy","r":"C"},{"n":49,"name":"Hisuian Sliggoo","r":"U"},{"n":50,"name":"Hisuian Goodra","r":"R"},{"n":51,"name":"Jigglypuff","r":"C"},{"n":52,"name":"Wigglytuff","r":"U"},{"n":53,"name":"Eevee","r":"C"},{"n":54,"name":"Munchlax","r":"R"},{"n":55,"name":"Snorlax","r":"R"},{"n":56,"name":"Teddiursa","r":"C"},{"n":57,"name":"Ursaring","r":"U"},{"n":58,"name":"Ursaluna","r":"R"},{"n":59,"name":"Hisuian Zorua","r":"C"},{"n":60,"name":"Hisuian Zoroark ex","r":"DR"},{"n":61,"name":"Furfrou","r":"C"},{"n":62,"name":"Skwovet","r":"C"},{"n":63,"name":"Greedent","r":"U"},{"n":64,"name":"Small Balloon","r":"U"},{"n":65,"name":"Elegant Cape","r":"U"},{"n":66,"name":"Elesa","r":"U"},{"n":67,"name":"Puppy-Loving Girl","r":"U"},{"n":68,"name":"Wallace","r":"U"},{"n":69,"name":"Kid's Room","r":"U"},{"n":70,"name":"Vulpix","r":"AR"},{"n":71,"name":"Piplup","r":"AR"},{"n":72,"name":"Pikachu","r":"AR"},{"n":73,"name":"Sylveon","r":"AR"},{"n":74,"name":"Mareanie","r":"AR"},{"n":75,"name":"Jigglypuff","r":"AR"},{"n":76,"name":"Snorlax","r":"AR"},{"n":77,"name":"Greedent","r":"AR"},{"n":78,"name":"Milotic ex","r":"SR"},{"n":79,"name":"Dedenne ex","r":"SR"},{"n":80,"name":"Mega Diancie ex","r":"SR"},{"n":81,"name":"Mega Sableye ex","r":"SR"},{"n":82,"name":"Hisuian Zoroark ex","r":"SR"},{"n":83,"name":"Elesa","r":"SR"},{"n":84,"name":"Puppy-Loving Girl","r":"SR"},{"n":85,"name":"Wallace","r":"SR"},{"n":86,"name":"Milotic ex","r":"SAR"},{"n":87,"name":"Mega Diancie ex","r":"SAR"},{"n":88,"name":"Mega Sableye ex","r":"SAR"},{"n":89,"name":"Hisuian Zoroark ex","r":"SAR"},{"n":90,"name":"Dedenne ex","r":"IM"},{"n":91,"name":"Caterpie","r":"SH"},{"n":92,"name":"Metapod","r":"SH"},{"n":93,"name":"Butterfree","r":"SH"},{"n":94,"name":"Mareep","r":"SH"},{"n":95,"name":"Flaaffy","r":"SH"},{"n":96,"name":"Ampharos","r":"SH"},{"n":97,"name":"Slowbro","r":"SH"},{"n":98,"name":"Kangaskhan","r":"SH"},{"n":99,"name":"Ditto","r":"SH"},{"n":100,"name":"Snorlax","r":"SH"},{"n":101,"name":"Mega Gyarados ex","r":"SHSR"},{"n":102,"name":"Vaporeon ex","r":"SHSR"},{"n":103,"name":"Mega Ampharos ex","r":"SHSR"},{"n":104,"name":"Indeedee ex","r":"SHSR"},{"n":105,"name":"Munchlax","r":"CR"},{"n":106,"name":"Small Balloon","r":"CR"}]},{"id":"c1","name":"Dual Fusion","short":"Fusión Dual","release":"2026-10-29","cards":[{"n":1,"name":"Bulbasaur","r":"C"},{"n":2,"name":"Ivysaur","r":"C"},{"n":3,"name":"Venusaur","r":"R"},{"n":4,"name":"Exeggcute","r":"C"},{"n":5,"name":"Alolan Exeggutor ex","r":"DR"},{"n":6,"name":"Pinsir","r":"C"},{"n":7,"name":"Combee","r":"C"},{"n":8,"name":"Vespiquen","r":"U"},{"n":9,"name":"Deerling","r":"C"},{"n":10,"name":"Sawsbuck","r":"U"},{"n":11,"name":"Foongus","r":"C"},{"n":12,"name":"Amoonguss","r":"U"},{"n":13,"name":"Genesect","r":"U"},{"n":14,"name":"Cutiefly","r":"C"},{"n":15,"name":"Ribombee","r":"R"},{"n":16,"name":"Charmander","r":"C"},{"n":17,"name":"Charmeleon","r":"C"},{"n":18,"name":"Charizard","r":"R"},{"n":19,"name":"Volcanion","r":"R"},{"n":20,"name":"Salandit","r":"C"},{"n":21,"name":"Salazzle","r":"U"},{"n":22,"name":"Scorbunny","r":"C"},{"n":23,"name":"Raboot","r":"U"},{"n":24,"name":"Cinderace","r":"R"},{"n":25,"name":"Fuecoco ex","r":"DR"},{"n":26,"name":"Charcadet","r":"C"},{"n":27,"name":"Armarouge","r":"U"},{"n":28,"name":"Ceruledge","r":"U"},{"n":29,"name":"Squirtle","r":"C"},{"n":30,"name":"Wartortle","r":"C"},{"n":31,"name":"Blastoise","r":"R"},{"n":32,"name":"Seel","r":"C"},{"n":33,"name":"Dewgong","r":"U"},{"n":34,"name":"Shellder","r":"C"},{"n":35,"name":"Cloyster","r":"U"},{"n":36,"name":"Jynx","r":"C"},{"n":37,"name":"Lapras","r":"U"},{"n":38,"name":"Palkia","r":"R"},{"n":39,"name":"Basculin","r":"C"},{"n":40,"name":"Froakie","r":"C"},{"n":41,"name":"Frogadier","r":"U"},{"n":42,"name":"Mega Greninja ex","r":"DR"},{"n":43,"name":"Pikachu ex","r":"DR"},{"n":44,"name":"Voltorb","r":"C"},{"n":45,"name":"Electrode","r":"U"},{"n":46,"name":"Stunfisk","r":"C"},{"n":47,"name":"Zeraora","r":"R"},{"n":48,"name":"Pawmi","r":"C"},{"n":49,"name":"Pawmo","r":"C"},{"n":50,"name":"Pawmot","r":"R"},{"n":51,"name":"Jigglypuff","r":"C"},{"n":52,"name":"Wigglytuff","r":"U"},{"n":53,"name":"Abra","r":"C"},{"n":54,"name":"Kadabra","r":"C"},{"n":55,"name":"Alakazam","r":"U"},{"n":56,"name":"Mega Mewtwo X ex","r":"DR"},{"n":57,"name":"Mew ex","r":"DR"},{"n":58,"name":"Marill","r":"C"},{"n":59,"name":"Azumarill","r":"U"},{"n":60,"name":"Espeon","r":"U"},{"n":61,"name":"Wobbuffet","r":"C"},{"n":62,"name":"Deoxys","r":"R"},{"n":63,"name":"Mimikyu","r":"C"},{"n":64,"name":"Cosmog","r":"C"},{"n":65,"name":"Cosmoem","r":"U"},{"n":66,"name":"Lunala","r":"R"},{"n":67,"name":"Diglett","r":"C"},{"n":68,"name":"Dugtrio","r":"U"},{"n":69,"name":"Rhyhorn","r":"C"},{"n":70,"name":"Rhydon","r":"C"},{"n":71,"name":"Rhyperior","r":"R"},{"n":72,"name":"Sudowoodo","r":"C"},{"n":73,"name":"Paldean Wooper","r":"C"},{"n":74,"name":"Paldean Clodsire","r":"R"},{"n":75,"name":"Larvitar","r":"C"},{"n":76,"name":"Pupitar","r":"U"},{"n":77,"name":"Barboach","r":"C"},{"n":78,"name":"Whiscash","r":"U"},{"n":79,"name":"Rockruff","r":"C"},{"n":80,"name":"Lycanroc ex","r":"DR"},{"n":81,"name":"Gastly","r":"C"},{"n":82,"name":"Haunter","r":"C"},{"n":83,"name":"Gengar","r":"R"},{"n":84,"name":"Umbreon","r":"U"},{"n":85,"name":"Mega Tyranitar ex","r":"DR"},{"n":86,"name":"Seviper","r":"C"},{"n":87,"name":"Zorua","r":"C"},{"n":88,"name":"Zoroark","r":"R"},{"n":89,"name":"Nickit","r":"C"},{"n":90,"name":"Thievul","r":"U"},{"n":91,"name":"Mega Skarmory ex","r":"DR"},{"n":92,"name":"Dialga","r":"R"},{"n":93,"name":"Ferroseed","r":"C"},{"n":94,"name":"Ferrothorn","r":"U"},{"n":95,"name":"Solgaleo","r":"R"},{"n":96,"name":"Meltan","r":"C"},{"n":97,"name":"Melmetal","r":"R"},{"n":98,"name":"Dratini","r":"C"},{"n":99,"name":"Dragonair","r":"C"},{"n":100,"name":"Mega Dragonite ex","r":"DR"},{"n":101,"name":"Giratina ex","r":"DR"},{"n":102,"name":"Pidgey","r":"C"},{"n":103,"name":"Pidgeotto","r":"C"},{"n":104,"name":"Pidgeot","r":"R"},{"n":105,"name":"Spearow","r":"C"},{"n":106,"name":"Fearow","r":"U"},{"n":107,"name":"Eevee","r":"C"},{"n":108,"name":"Porygon","r":"C"},{"n":109,"name":"Porygon2","r":"U"},{"n":110,"name":"Porygon-Z","r":"R"},{"n":111,"name":"Snorlax","r":"U"},{"n":112,"name":"Zangoose","r":"C"},{"n":113,"name":"Bidoof","r":"C"},{"n":114,"name":"Bibarel","r":"U"},{"n":115,"name":"Buneary","r":"C"},{"n":116,"name":"Lopunny","r":"U"},{"n":117,"name":"Stufful","r":"C"},{"n":118,"name":"Bewear ex","r":"DR"},{"n":119,"name":"Sweet Honey","r":"U"},{"n":120,"name":"Super Potion","r":"U"},{"n":121,"name":"Max Repel","r":"U"},{"n":122,"name":"Full Heal","r":"U"},{"n":123,"name":"Eviolite","r":"U"},{"n":124,"name":"Light Ball","r":"U"},{"n":125,"name":"Lorelei","r":"U"},{"n":126,"name":"Blue's Provocation","r":"U"},{"n":127,"name":"Serena's Choice","r":"U"},{"n":128,"name":"Rika","r":"U"},{"n":129,"name":"Poké Mart Guy","r":"U"},{"n":130,"name":"Rising Star","r":"U"},{"n":131,"name":"Abandoned Station","r":"U"},{"n":132,"name":"Venusaur","r":"AR"},{"n":133,"name":"Exeggcute","r":"AR"},{"n":134,"name":"Deerling","r":"AR"},{"n":135,"name":"Ribombee","r":"AR"},{"n":136,"name":"Charizard","r":"AR"},{"n":137,"name":"Raboot","r":"AR"},{"n":138,"name":"Ceruledge","r":"AR"},{"n":139,"name":"Blastoise","r":"AR"},{"n":140,"name":"Palkia","r":"AR"},{"n":141,"name":"Frogadier","r":"AR"},{"n":142,"name":"Pawmot","r":"AR"},{"n":143,"name":"Mimikyu","r":"AR"},{"n":144,"name":"Cosmoem","r":"AR"},{"n":145,"name":"Larvitar","r":"AR"},{"n":146,"name":"Pupitar","r":"AR"},{"n":147,"name":"Paldean Clodsire","r":"AR"},{"n":148,"name":"Gengar","r":"AR"},{"n":149,"name":"Dialga","r":"AR"},{"n":150,"name":"Melmetal","r":"AR"},{"n":151,"name":"Bidoof","r":"AR"},{"n":152,"name":"Sweet Honey","r":"AR"},{"n":153,"name":"Alolan Exeggutor ex","r":"SR"},{"n":154,"name":"Fuecoco ex","r":"SR"},{"n":155,"name":"Mega Greninja ex","r":"SR"},{"n":156,"name":"Pikachu ex","r":"SR"},{"n":157,"name":"Mega Mewtwo X ex","r":"SR"},{"n":158,"name":"Mew ex","r":"SR"},{"n":159,"name":"Lycanroc ex","r":"SR"},{"n":160,"name":"Mega Tyranitar ex","r":"SR"},{"n":161,"name":"Mega Skarmory ex","r":"SR"},{"n":162,"name":"Mega Dragonite ex","r":"SR"},{"n":163,"name":"Giratina ex","r":"SR"},{"n":164,"name":"Bewear ex","r":"SR"},{"n":165,"name":"Lorelei","r":"SR"},{"n":166,"name":"Blue's Provocation","r":"SR"},{"n":167,"name":"Serena's Choice","r":"SR"},{"n":168,"name":"Rika","r":"SR"},{"n":169,"name":"Poké Mart Guy","r":"SR"},{"n":170,"name":"Rising Star","r":"SR"},{"n":171,"name":"Alolan Exeggutor ex","r":"SAR"},{"n":172,"name":"Fuecoco ex","r":"SAR"},{"n":173,"name":"Mega Greninja ex","r":"SAR"},{"n":174,"name":"Pikachu ex","r":"SAR"},{"n":175,"name":"Mega Mewtwo X ex","r":"SAR"},{"n":176,"name":"Mew ex","r":"SAR"},{"n":177,"name":"Lycanroc ex","r":"SAR"},{"n":178,"name":"Mega Tyranitar ex","r":"SAR"},{"n":179,"name":"Mega Skarmory ex","r":"SAR"},{"n":180,"name":"Mega Dragonite ex","r":"SAR"},{"n":181,"name":"Giratina ex","r":"SAR"},{"n":182,"name":"Bewear ex","r":"SAR"},{"n":183,"name":"Pikachu ex","r":"IM"},{"n":184,"name":"Jigglypuff","r":"IM"},{"n":185,"name":"Mega Mewtwo X ex","r":"IM"},{"n":186,"name":"Umbreon","r":"IM"},{"n":187,"name":"Celebi","r":"SH"},{"n":188,"name":"Treecko","r":"SH"},{"n":189,"name":"Grovyle","r":"SH"},{"n":190,"name":"Cyndaquil","r":"SH"},{"n":191,"name":"Quilava","r":"SH"},{"n":192,"name":"Seel","r":"SH"},{"n":193,"name":"Dewgong","r":"SH"},{"n":194,"name":"Pachirisu","r":"SH"},{"n":195,"name":"Abra","r":"SH"},{"n":196,"name":"Kadabra","r":"SH"},{"n":197,"name":"Alakazam","r":"SH"},{"n":198,"name":"Lunala","r":"SH"},{"n":199,"name":"Rhyhorn","r":"SH"},{"n":200,"name":"Rhydon","r":"SH"},{"n":201,"name":"Morpeko","r":"SH"},{"n":202,"name":"Solgaleo","r":"SH"},{"n":203,"name":"Spearow","r":"SH"},{"n":204,"name":"Fearow","r":"SH"},{"n":205,"name":"Hisuian Zorua","r":"SH"},{"n":206,"name":"Stufful","r":"SH"},{"n":207,"name":"Mega Sceptile ex","r":"SHSR"},{"n":208,"name":"Typhlosion ex","r":"SHSR"},{"n":209,"name":"Mega Gallade ex","r":"SHSR"},{"n":210,"name":"Lycanroc ex","r":"SHSR"},{"n":211,"name":"Mega Dragonite ex","r":"SHSR"},{"n":212,"name":"Mega Audino ex","r":"SHSR"},{"n":213,"name":"Hisuian Zoroark ex","r":"SHSR"},{"n":214,"name":"Bewear ex","r":"SHSR"},{"n":215,"name":"Fuecoco ex","r":"CR"},{"n":216,"name":"Pawmot","r":"CR"},{"n":217,"name":"Giratina ex","r":"CR"}]}];
+const NUM_PLAYERS = 3;
+const DEFAULT_NAMES = ["Jugador 1","Jugador 2","Jugador 3"];
+const PLAYER_DOTS = ["#2A75BB","#EE1515","#FFCB05"];
+
+// Rarity taxonomy, based on TCG Pocket's real pull-rate tiers.
+// "normal" group = the cards required to complete the collection.
+const RARITY_INFO = {
+  C:    { label:"Común",              group:"normal",  tag:null },
+  U:    { label:"Poco común",         group:"normal",  tag:null },
+  R:    { label:"Rara",               group:"normal",  tag:null },
+  DR:   { label:"Doble rara (ex)",    group:"normal",  tag:{cls:"t-ex",  text:"EX"} },
+  AR:   { label:"Fullart",            group:"fullart", tag:{cls:"t-ar",  text:"Fullart"} },
+  SR:   { label:"EX Fullart",         group:"exrainbow",tag:{cls:"t-sr", text:"EX Fullart"} },
+  SAR:  { label:"Rainbow",            group:"exrainbow",tag:{cls:"t-sar",text:"Rainbow"} },
+  IM:   { label:"Inmersiva",          group:"immersive",tag:{cls:"t-im", text:"Inmersiva"} },
+  SH:   { label:"Shiny",              group:"shiny1",  tag:{cls:"t-sh",  text:"Shiny"} },
+  SHSR: { label:"Shiny Fullart",      group:"shiny2",  tag:{cls:"t-shsr",text:"Shiny Fullart"} },
+  CR:   { label:"Dorada",             group:"gold",    tag:{cls:"t-cr",  text:"Dorada"} },
+};
+const RARITY_FILTERS = [
+  { value:"all",       label:"Todas las rarezas" },
+  { value:"normal",    label:"Normales (para completar)" },
+  { value:"ex",        label:"EX" },
+  { value:"fullart",   label:"Fullarts" },
+  { value:"exrainbow", label:"EX Fullarts y Rainbow" },
+  { value:"shiny1",    label:"Shinies" },
+  { value:"shiny2",    label:"Shinies Fullart" },
+  { value:"immersive", label:"Inmersivas" },
+  { value:"gold",      label:"Doradas" },
+];
+
+// Precompute per-set normal/total counts
+SETS.forEach(s => {
+  s.normalCount = s.cards.filter(c => RARITY_INFO[c.r].group === "normal").length;
+  s.totalCount = s.cards.length;
+});
+
+let state = {
+  players: DEFAULT_NAMES.slice(),
+  owned: [{}, {}, {}], // owned[playerIdx][cardKey] = true
+  activeSet: SETS[0].id,
+  search: "",
+  rarity: "normal",
+  onlyIncomplete: false, // true = ocultar cartas que ya tienen los 3 jugadores
+};
+
+let db = null;
+let lastMarkAll = null; // {p, setId, keys} — the most recent "completar" batch, so the same button can undo it
+
+function cardKey(setId, n){ return setId + "-" + n; }
+
+function ownerCountForKey(key){
+  let c = 0;
+  for(let p=0;p<NUM_PLAYERS;p++) if(state.owned[p][key]) c++;
+  return c;
+}
+
+function initials(name){
+  const trimmed = (name||"").trim();
+  if(!trimmed) return "?";
+  return trimmed[0].toUpperCase();
+}
+
+// ---------- Rendering ----------
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+}
+
+function highlight(name, term){
+  if(!term) return escapeHtml(name);
+  const idx = name.toLowerCase().indexOf(term.toLowerCase());
+  if(idx === -1) return escapeHtml(name);
+  return escapeHtml(name.slice(0,idx)) + "<b class='hit'>" + escapeHtml(name.slice(idx, idx+term.length)) + "</b>" + escapeHtml(name.slice(idx+term.length));
+}
+
+function renderPlayers(){
+  const el = document.getElementById("players");
+  el.innerHTML = "";
+  for(let p=0;p<NUM_PLAYERS;p++){
+    const div = document.createElement("div");
+    div.className = "player-card";
+    div.innerHTML = `
+      <div class="player-top">
+        <span class="player-dot" style="background:${PLAYER_DOTS[p]}"></span>
+        <input class="player-name" data-p="${p}" value="${escapeHtml(state.players[p])}" maxlength="18">
+      </div>
+    `;
+    el.appendChild(div);
+  }
+  el.querySelectorAll(".player-name").forEach(inp => {
+    inp.addEventListener("input", e => {
+      const p = +e.target.dataset.p;
+      state.players[p] = e.target.value;
+      updateHeadDots();
+    });
+    inp.addEventListener("change", e => {
+      const p = +e.target.dataset.p;
+      const val = e.target.value.trim() || DEFAULT_NAMES[p];
+      state.players[p] = val;
+      if(e.target.value !== val) e.target.value = val;
+      setPlayerName(p, val);
+    });
+  });
+  updateHeadDots();
+}
+
+function updateHeadDots(){
+  for(let p=0;p<NUM_PLAYERS;p++){
+    const name = state.players[p] || DEFAULT_NAMES[p];
+    const h = document.getElementById("h"+p);
+    if(h) h.innerHTML = `<span class="head-dot" style="background:${PLAYER_DOTS[p]}" title="${escapeHtml(name)}">${escapeHtml(initials(name))}</span>`;
+    const mb = document.querySelector(`.markall-btn[data-p="${p}"]`);
+    if(mb){
+      mb.style.background = PLAYER_DOTS[p];
+      mb.textContent = initials(name);
+      mb.title = `Marcar todas como "tengo" (${name}) en esta pestaña`;
+    }
+  }
+}
+
+function renderTabs(){
+  const el = document.getElementById("tabs");
+  el.innerHTML = "";
+  SETS.forEach(s => {
+    const btn = document.createElement("button");
+    btn.className = "tab";
+    btn.type = "button";
+    btn.role = "tab";
+    btn.setAttribute("aria-selected", s.id === state.activeSet ? "true":"false");
+    btn.innerHTML = `${escapeHtml(s.short)} <span class="n">${s.normalCount} (${s.totalCount})</span>`;
+    btn.addEventListener("click", () => { state.activeSet = s.id; renderTabs(); renderRows(); renderMeta(); });
+    el.appendChild(btn);
+  });
+}
+
+function renderMeta(){
+  const s = SETS.find(x => x.id === state.activeSet);
+  const el = document.getElementById("setMeta");
+  const d = new Date(s.release + "T00:00:00");
+  const dateStr = d.toLocaleDateString("es-ES", {day:"numeric", month:"long", year:"numeric"});
+  el.innerHTML = escapeHtml(s.name) + " · salió el " + dateStr + " · <b>" + s.normalCount + "</b> normales para completarla (" + s.totalCount + " cartas en total con extras)";
+}
+
+function matchesFilters(s, c){
+  if(state.search){
+    if(!c.name.toLowerCase().includes(state.search.toLowerCase())) return false;
+  }
+  const info = RARITY_INFO[c.r];
+  if(state.rarity === "ex" && c.r !== "DR") return false;
+  else if(state.rarity !== "all" && state.rarity !== "ex" && info.group !== state.rarity) return false;
+  if(state.onlyIncomplete && ownerCountForKey(cardKey(s.id, c.n)) === NUM_PLAYERS) return false;
+  return true;
+}
+
+function renderRows(){
+  const s = SETS.find(x => x.id === state.activeSet);
+  const rowsEl = document.getElementById("rows");
+  const empty = document.getElementById("emptyState");
+  rowsEl.innerHTML = "";
+  let shown = 0;
+  const frag = document.createDocumentFragment();
+  s.cards.forEach(c => {
+    if(!matchesFilters(s,c)) return;
+    shown++;
+    const key = cardKey(s.id, c.n);
+    const cnt = ownerCountForKey(key);
+    const info = RARITY_INFO[c.r];
+    const row = document.createElement("div");
+    row.className = "row" + (cnt===NUM_PLAYERS ? " all-have" : "") + (cnt===0 ? " none-have" : "");
+    let tags = "";
+    if(info.tag) tags += `<span class="tag ${info.tag.cls}">${info.tag.text}</span>`;
+    let chkHtml = "";
+    for(let p=0;p<NUM_PLAYERS;p++){
+      const has = !!state.owned[p][key];
+      const otherHas = !has && cnt > 0;
+      const cls = has ? "have" : (otherHas ? "some" : "want");
+      chkHtml += `<div class="chk"><button type="button" class="${cls}" data-key="${key}" data-p="${p}" aria-label="${escapeHtml(state.players[p])}: ${has?'la tiene':'no la tiene'}"></button></div>`;
+    }
+    row.innerHTML = `
+      <div class="namewrap"><span class="card-id">${String(c.n).padStart(3,"0")}</span><span class="card-name">${highlight(c.name, state.search)}</span>${tags}</div>
+      ${chkHtml}
+    `;
+    frag.appendChild(row);
+  });
+  rowsEl.appendChild(frag);
+  empty.hidden = shown > 0;
+  rowsEl.querySelectorAll("button[data-key]").forEach(btn => {
+    btn.addEventListener("click", () => toggleOwned(+btn.dataset.p, btn.dataset.key));
+  });
+}
+
+function renderRarityOptions(){
+  const el = document.getElementById("rarity");
+  el.innerHTML = RARITY_FILTERS.map(f => `<option value="${f.value}">${escapeHtml(f.label)}</option>`).join("");
+  el.value = state.rarity;
+}
+
+function renderAskCount(){
+  let n = 0;
+  SETS.forEach(s => s.cards.forEach(c => {
+    if(RARITY_INFO[c.r].group !== "normal") return;
+    if(ownerCountForKey(cardKey(s.id,c.n)) === 0) n++;
+  }));
+  document.getElementById("askCount").textContent = n;
+}
+
+function renderAll(){
+  renderPlayers();
+  renderTabs();
+  renderMeta();
+  renderRows();
+  renderAskCount();
+}
+
+// Used after a checkbox toggle (locally or from another viewer via db).
+// Tab labels and set info are static composition numbers, so they don't
+// need to move — and crucially, this never rebuilds the name inputs.
+function refreshAfterToggle(){
+  renderRows();
+  renderAskCount();
+}
+
+// Marks every card currently visible (respecting the active tab, rarity
+// filter, search and "solo faltantes" toggle) as "have" for one player —
+// handy near the end of a collection, when it's easier to start from
+// "tengo todas" and uncheck the few missing ones than the other way round.
+async function persistOwnedPatch(p, keys, value){
+  if(!db) return;
+  try{
+    const ref = col().doc("progress_p"+p);
+    const snap = await ref.get();
+    const patch = {};
+    keys.forEach(k => { patch["owned."+k] = value; });
+    if(snap.exists) await ref.update(patch);
+    else{
+      const owned = {};
+      keys.forEach(k => { owned[k] = value; });
+      await ref.set({owned});
+    }
+  }catch(e){ /* best effort, local state already updated */ }
+}
+
+function markAllVisible(p){
+  const s = SETS.find(x => x.id === state.activeSet);
+  const visible = s.cards.filter(c => matchesFilters(s, c));
+  const name = state.players[p] || DEFAULT_NAMES[p];
+
+  // Pulsar el mismo botón justo después deshace exactamente lo que acaba de
+  // marcar (no toca cartas que ya estuvieran marcadas antes de esa acción).
+  if(lastMarkAll && lastMarkAll.p === p && lastMarkAll.setId === s.id &&
+     lastMarkAll.keys.length > 0 && lastMarkAll.keys.every(k => state.owned[p][k])){
+    const keys = lastMarkAll.keys;
+    keys.forEach(k => { state.owned[p][k] = false; });
+    lastMarkAll = null;
+    refreshAfterToggle();
+    showToast(`Deshecho: ${keys.length} cartas de ${name} vuelven a estar sin marcar`);
+    persistOwnedPatch(p, keys, false);
+    return;
+  }
+
+  const toMark = visible.filter(c => !state.owned[p][cardKey(s.id, c.n)]);
+  if(toMark.length === 0){ showToast(`${name} ya las tiene todas marcadas aquí`); lastMarkAll = null; return; }
+
+  const keys = toMark.map(c => cardKey(s.id, c.n));
+  keys.forEach(k => { state.owned[p][k] = true; });
+  lastMarkAll = { p, setId: s.id, keys };
+  refreshAfterToggle();
+  showToast(`Marcadas ${keys.length} cartas de ${name} — pulsa otra vez para deshacer`);
+  persistOwnedPatch(p, keys, true);
+}
+
+// ---------- Ask sheet (only counts the "normal" cards needed to complete the collection) ----------
+function buildAskText(){
+  let lines = [];
+  lines.push("📋 CARTAS QUE NOS FALTAN — Carpeta Pocket");
+  lines.push("(solo cartas normales, las que hacen falta para completar la colección)");
+  lines.push("");
+  SETS.forEach(s => {
+    const normalCards = s.cards.filter(c => RARITY_INFO[c.r].group === "normal");
+    const missing = normalCards.filter(c => ownerCountForKey(cardKey(s.id,c.n)) === 0);
+    lines.push(`🗂️ ${s.name} (nadie la tiene: ${missing.length})`);
+    if(missing.length === 0){
+      lines.push("  — ¡completa entre los 3! 🎉");
+    } else {
+      missing.forEach(c => lines.push(`  · ${String(c.n).padStart(3,"0")} ${c.name}${c.r==="DR"?" (ex)":""}`));
+    }
+    lines.push("");
+  });
+  lines.push("— — —");
+  for(let p=0;p<NUM_PLAYERS;p++){
+    let mine = [];
+    SETS.forEach(s => s.cards.forEach(c => {
+      if(RARITY_INFO[c.r].group !== "normal") return;
+      const key = cardKey(s.id,c.n);
+      if(!state.owned[p][key] && ownerCountForKey(key) > 0) mine.push(s.short+" · "+String(c.n).padStart(3,"0")+" "+c.name);
+    }));
+    lines.push(`🙋 A ${state.players[p]} le faltan (y algún compañero la tiene): ${mine.length}`);
+    mine.slice(0,200).forEach(m => lines.push("  · " + m));
+    lines.push("");
+  }
+  return lines.join("\n");
+}
+
+function renderAskSheet(){
+  const body = document.getElementById("askBody");
+  body.innerHTML = "";
+
+  const noOneGroup = document.createElement("div");
+  noOneGroup.className = "ask-group";
+  const totalMissing = SETS.reduce((a,s)=>a+s.cards.filter(c=>RARITY_INFO[c.r].group==="normal" && ownerCountForKey(cardKey(s.id,c.n))===0).length,0);
+  let noOneHtml = `<h3>❗ Nadie del grupo las tiene <span class="n">(${totalMissing})</span></h3>`;
+  SETS.forEach(s => {
+    const missing = s.cards.filter(c => RARITY_INFO[c.r].group === "normal" && ownerCountForKey(cardKey(s.id,c.n)) === 0);
+    noOneHtml += `<p style="margin:10px 0 4px;font-weight:600;font-size:.8rem;color:var(--ink-soft)">${escapeHtml(s.short)}</p>`;
+    noOneHtml += `<div class="ask-list">`;
+    if(missing.length === 0) noOneHtml += `<span class="none">Completa entre los 3 🎉</span>`;
+    else noOneHtml += missing.map(c => `${String(c.n).padStart(3,"0")} ${escapeHtml(c.name)}${c.r==="DR"?" <i>(ex)</i>":""}`).join("<br>");
+    noOneHtml += `</div>`;
+  });
+  noOneGroup.innerHTML = noOneHtml;
+  body.appendChild(noOneGroup);
+
+  for(let p=0;p<NUM_PLAYERS;p++){
+    let mine = [];
+    SETS.forEach(s => s.cards.forEach(c => {
+      if(RARITY_INFO[c.r].group !== "normal") return;
+      const key = cardKey(s.id,c.n);
+      if(!state.owned[p][key] && ownerCountForKey(key) > 0) mine.push(String(c.n).padStart(3,"0")+" "+c.name+" <span style='color:var(--ink-soft);font-size:.72rem'>· la tiene alguien del grupo</span>");
+    }));
+    const g = document.createElement("div");
+    g.className = "ask-group";
+    g.innerHTML = `<h3>🙋 A ${escapeHtml(state.players[p])} le faltan <span class="n">(${mine.length})</span></h3>
+      <div class="ask-list">${mine.length ? mine.join("<br>") : "<span class='none'>Nada pendiente por aquí 🎉</span>"}</div>`;
+    body.appendChild(g);
+  }
+}
+
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => t.classList.remove("show"), 1800);
+}
+
+async function copyText(text){
+  try{
+    await navigator.clipboard.writeText(text);
+    showToast("Copiado ✅ pégalo en el grupo");
+  }catch(e){
+    showToast("No se pudo copiar automáticamente");
+  }
+}
+
+// ---------- Firestore wiring ----------
+// One shared, public collection ("carpetaPocket") — anyone with this file
+// can read/write it, matching the Firestore rules set up for the group.
+// No login of any kind, on any side, is involved.
+function col(){ return db.collection("carpetaPocket"); }
+
+async function setPlayerName(idx, name){
+  // State and the input's own DOM value are already correct (set by the
+  // change handler) — this only persists it, no re-render needed.
+  if(!db) return;
+  try{
+    const ref = col().doc("players");
+    const snap = await ref.get();
+    const patch = {["name"+idx]: name};
+    if(snap.exists) await ref.update(patch); else await ref.set(patch);
+  }catch(e){ /* best effort */ }
+}
+
+async function toggleOwned(p, key){
+  const cur = !!state.owned[p][key];
+  state.owned[p][key] = !cur;
+  refreshAfterToggle();
+  if(!db) return;
+  try{
+    const ref = col().doc("progress_p"+p);
+    const snap = await ref.get();
+    // Firestore's update() replaces a nested object field wholesale, so a
+    // dot-path key ("owned.<cardKey>") is required for a true partial merge
+    // that doesn't wipe out every other card's checkmark.
+    if(snap.exists) await ref.update({["owned."+key]: !cur});
+    else await ref.set({owned:{[key]: !cur}});
+  }catch(e){ /* best effort, local state already updated */ }
+}
+
+async function initDb(){
+  try{
+    if(typeof firebase === "undefined") throw new Error("Firebase SDK not loaded");
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+  }catch(e){ db = null; }
+  if(!db){
+    document.getElementById("syncNote").classList.add("show");
+    return;
+  }
+  col().doc("players").onSnapshot(snap => {
+    if(snap.exists){
+      const d = snap.data();
+      for(let p=0;p<NUM_PLAYERS;p++){
+        if(d["name"+p]) state.players[p] = d["name"+p];
+      }
+      renderAll();
+    }
+    document.getElementById("syncNote").classList.remove("show");
+  }, () => { document.getElementById("syncNote").classList.add("show"); });
+
+  for(let p=0;p<NUM_PLAYERS;p++){
+    col().doc("progress_p"+p).onSnapshot(snap => {
+      if(snap.exists){
+        const d = snap.data();
+        state.owned[p] = (d.owned && typeof d.owned === "object") ? d.owned : {};
+        refreshAfterToggle();
+      }
+      document.getElementById("syncNote").classList.remove("show");
+    }, () => { document.getElementById("syncNote").classList.add("show"); });
+  }
+}
+
+// ---------- Init ----------
+renderRarityOptions();
+document.getElementById("search").addEventListener("input", e => { state.search = e.target.value; renderRows(); });
+document.getElementById("rarity").addEventListener("change", e => { state.rarity = e.target.value; renderRows(); });
+document.getElementById("onlyIncomplete").addEventListener("change", e => { state.onlyIncomplete = e.target.checked; renderRows(); });
+document.querySelectorAll(".markall-btn").forEach(btn => {
+  btn.addEventListener("click", () => markAllVisible(+btn.dataset.p));
+});
+document.getElementById("openAsk").addEventListener("click", () => { renderAskSheet(); document.getElementById("askOverlay").hidden = false; });
+document.getElementById("closeAsk").addEventListener("click", () => { document.getElementById("askOverlay").hidden = true; });
+document.getElementById("askOverlay").addEventListener("click", e => { if(e.target.id === "askOverlay") e.currentTarget.hidden = true; });
+document.getElementById("copyAll").addEventListener("click", () => copyText(buildAskText()));
+
+renderAll();
+initDb();
+</script>
+</body>
+</html>
