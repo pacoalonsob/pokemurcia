@@ -386,7 +386,8 @@ const RARITY_FILTERS = [
   { value:"gold",      label:"Doradas" },
 ];
 
-// Precompute per-set normal/total counts
+SETS.sort((a,b)=>b.release.localeCompare(a.release)); // Más reciente primero
+  // Precompute per-set normal/total counts
 SETS.forEach(s => {
   s.normalCount = s.cards.filter(c => RARITY_INFO[c.r].group === "normal").length;
   s.totalCount = s.cards.length;
